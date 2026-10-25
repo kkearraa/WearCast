@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "WearCast",
+    "slug": "wearcast",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-secure-store"
+    ]
+  }
+}
