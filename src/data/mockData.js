@@ -1,9 +1,9 @@
 // Placeholder data used only to make the UI look alive. Replace with real data later.
 export const mockUser = {
-  name: 'Kira Pugachova',
-  firstName: 'Kira',
-  email: 'kira.pugachova@email.com',
-  initials: 'KP',
+  name: 'Alex Morgan',
+  firstName: 'Alex',
+  email: 'alex.morgan@email.com',
+  initials: 'AM',
 };
 
 export const mockWeather = {
@@ -29,13 +29,13 @@ export const mockWeather = {
 
 export const mockOutfit = {
   pieces: [
-    { id: 'o1', category: 'Outerwear', name: 'Waterproof Coat', note: 'Keeps the rain out' },
+    { id: 'o1', category: 'Outerwear', name: 'Waterproof Parka', note: 'Keeps the rain out' },
     { id: 'o2', category: 'Tops', name: 'Grey Wool Sweater', note: 'Warm base layer' },
     { id: 'o3', category: 'Bottoms', name: 'Dark Denim Jeans', note: 'Hides splashes' },
     { id: 'o4', category: 'Shoes', name: 'Waterproof Boots', note: 'Dry feet all day' },
   ],
   tip:
-    'Light rain and a chilly breeze today. Layering a warm sweater under a waterproof parka keeps you comfortable, and boots will handle the puddles.',
+    'This is a sample suggestion. Soon the assistant will pick pieces from your clean clothes based on the live weather above.',
 };
 
 export const mockItem = {

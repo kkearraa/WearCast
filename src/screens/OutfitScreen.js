@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Chip from '../components/Chip';
 import PrimaryButton from '../components/PrimaryButton';
 import OfflineBanner from '../components/OfflineBanner';
-import { mockWeather, mockOutfit } from '../data/mockData';
+import { mockOutfit } from '../data/mockData';
+import { useWeather } from '../context/WeatherContext';
+import { tempValue, windText, iconColor } from '../utils/units';
 import { formalities, colors, radius, shadow, getCategoryMeta } from '../theme';
-
-const isOffline = false; 
 
 export default function OutfitScreen() {
   const [occasion, setOccasion] = useState('Casual');
-  const w = mockWeather;
+  const { weather, source, error, loading, units, refresh } = useWeather();
+  const c = weather?.current;
+  const isOffline = error === 'OFFLINE';
+
+  // Make sure the weather is loaded (and fresh) whenever this tab is opened
+  useFocusEffect(
+    useCallback(() => {
+      refresh(false);
+    }, [refresh])
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -24,21 +34,35 @@ export default function OutfitScreen() {
           <OfflineBanner message="AI suggestions need an internet connection. You can still browse your closet." />
         )}
 
-        {/* Weather summary */}
-        <View style={styles.weather}>
+        {/* Weather summary (live) */}
+        <TouchableOpacity activeOpacity={0.85} style={styles.weather} onPress={() => refresh(true)}>
           <View style={styles.weatherIcon}>
-            <Ionicons name={w.icon} size={28} color={colors.primary} />
+            <Ionicons
+              name={weather ? c.icon : 'cloud-offline-outline'}
+              size={28}
+              color={weather ? iconColor(c.icon, true) : colors.faint}
+            />
           </View>
           <View style={{ flex: 1, marginLeft: 14 }}>
             <Text style={styles.weatherTitle}>
-              {w.temp}° · {w.condition}
+              {weather
+                ? `${tempValue(c.temp, units)}° · ${c.description}`
+                : loading
+                ? 'Loading weather...'
+                : 'Weather unavailable'}
             </Text>
             <Text style={styles.weatherSub}>
-              Rain {w.precipitation} · Wind {w.wind}
+              {weather
+                ? `Rain ${c.precipChance}% · Wind ${windText(c.windKmh, units)}${source === 'cache' ? ' · saved' : ''}`
+                : 'Tap to try again'}
             </Text>
           </View>
-          <Ionicons name="refresh" size={20} color={colors.faint} />
-        </View>
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Ionicons name="refresh" size={20} color={colors.faint} />
+          )}
+        </TouchableOpacity>
 
         {/* Occasion */}
         <Text style={styles.label}>What's the occasion?</Text>
@@ -55,7 +79,7 @@ export default function OutfitScreen() {
           <Text style={styles.resultTitle}>Your outfit for today</Text>
           <View style={styles.aiTag}>
             <Ionicons name="sparkles" size={12} color={colors.primary} />
-            <Text style={styles.aiTagText}>AI</Text>
+            <Text style={styles.aiTagText}>Sample</Text>
           </View>
         </View>
 

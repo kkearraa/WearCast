@@ -2,22 +2,23 @@ import * as SQLite from 'expo-sqlite';
 import { GUEST_ID } from './session';
 
 const DATABASE_NAME = 'wearcast.db';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 let dbPromise = null;
 
-// Make the web fail clearly instead of spinning forever
-// , which gives up after 10 seconds:
+// Gives up instead of waiting forever (for example if the database can't open).
 const withTimeout = (promise, ms) =>
   Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), ms)),
   ]);
 
+// One shared connection for the whole app. The first call opens + prepares the
+// database, every later call reuses the same promise.
 export function getDb() {
   if (!dbPromise) {
     dbPromise = withTimeout(initDb(), 10000).catch((e) => {
-      dbPromise = null; // allow a retry
+      dbPromise = null; // allow a retry if opening failed
       throw e;
     });
   }
@@ -29,24 +30,24 @@ async function initDb() {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   await migrate(db);
 
-  // Until real accounts exist, everything belongs to a built-in guest user.
+  // Built-in guest user, for "Continue as guest".
   await db.runAsync(
     'INSERT OR IGNORE INTO users (id, name, created_at) VALUES (?, ?, ?)',
     GUEST_ID,
     'Guest',
     Date.now()
   );
-
   return db;
 }
 
 // Versioned migrations: PRAGMA user_version remembers which schema the file has,
-// so future changes (new columns/tables) can be added as version 2, 3, ...
+// so new tables can be added later without losing existing data.
 async function migrate(db) {
   const row = await db.getFirstAsync('PRAGMA user_version');
   let version = row?.user_version ?? 0;
   if (version >= DATABASE_VERSION) return;
 
+  // Version 1: accounts + closet
   if (version === 0) {
     await db.execAsync(`
       CREATE TABLE users (
@@ -76,7 +77,22 @@ async function migrate(db) {
     version = 1;
   }
 
-  // if (version === 1) { ...future changes... version = 2; }
+  // Version 2: app settings + the last weather (so it still shows offline)
+  if (version === 1) {
+    await db.execAsync(`
+      CREATE TABLE settings (
+        key   TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+
+      CREATE TABLE weather_cache (
+        id         INTEGER PRIMARY KEY CHECK (id = 1),
+        data       TEXT NOT NULL,
+        fetched_at INTEGER NOT NULL
+      );
+    `);
+    version = 2;
+  }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
