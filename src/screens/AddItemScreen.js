@@ -1,11 +1,13 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import Field from '../components/Field';
 import Chip from '../components/Chip';
 import PrimaryButton from '../components/PrimaryButton';
 import { addClothingItem, updateItem } from '../utils/storage';
+import { saveImageFile, deleteImageFile } from '../utils/imageStore';
 import { categories, formalities, seasons, colors, radius, shadow } from '../theme';
 
 export default function AddItemScreen({ navigation, route }) {
@@ -18,6 +20,11 @@ export default function AddItemScreen({ navigation, route }) {
   const [formality, setFormality] = useState(editing?.formality || 'Casual');
   const [selectedSeasons, setSelectedSeasons] = useState(editing?.seasons || []);
   const [inLaundry, setInLaundry] = useState(editing?.status === 'In Laundry');
+  const [saving, setSaving] = useState(false);
+
+  // Photo: what is shown now, and whether the user changed it
+  const [photoUri, setPhotoUri] = useState(editing?.image || null);
+  const [photoChanged, setPhotoChanged] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: isEdit ? 'Edit Clothing' : 'Add Clothing' });
@@ -25,6 +32,58 @@ export default function AddItemScreen({ navigation, route }) {
 
   const toggleSeason = (s) =>
     setSelectedSeasons((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+
+  const useResult = (result) => {
+    if (!result.canceled && result.assets?.length) {
+      setPhotoUri(result.assets[0].uri);
+      setPhotoChanged(true);
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          'Camera permission needed',
+          'Allow camera access in your phone settings to take photos of your clothes.'
+        );
+        return;
+      }
+      useResult(
+        await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        })
+      );
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Could not open the camera.');
+    }
+  };
+
+  const pickFromGallery = async () => {
+    try {
+      useResult(
+        await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        })
+      );
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Could not open your gallery.');
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoUri(null);
+    setPhotoChanged(true);
+  };
 
   // Adds a new item, or updates the existing one when editing
   const handleSave = async () => {
@@ -41,40 +100,65 @@ export default function AddItemScreen({ navigation, route }) {
       status: inLaundry ? 'In Laundry' : 'Clean',
     };
 
+    setSaving(true);
+    let newPath = null; // permanent copy of a newly chosen photo
     try {
+      if (photoChanged && photoUri) newPath = await saveImageFile(photoUri);
+
       if (isEdit) {
-        await updateItem(editing.id, data);
+        const patch = { ...data };
+        if (photoChanged) patch.image = newPath; // new photo, or null when removed
+        await updateItem(editing.id, patch);
+        // the old photo is no longer used
+        if (photoChanged && editing.imagePath) await deleteImageFile(editing.imagePath);
       } else {
-        await addClothingItem({ ...data, image: null }); // photo capture comes later
+        await addClothingItem({ ...data, image: newPath });
       }
       navigation.goBack();
     } catch (e) {
       console.error(e);
+      if (newPath) await deleteImageFile(newPath); // don't leave an unused copy behind
       Alert.alert('Error', 'Could not save the item. Please try again.');
+      setSaving(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* Photo area */}
-        <View style={styles.photo}>
-          <View style={styles.photoIcon}>
-            <Ionicons name="camera-outline" size={34} color={colors.primary} />
-          </View>
-          <Text style={styles.photoTitle}>{isEdit ? 'Change photo' : 'Add a photo'}</Text>
-          <Text style={styles.photoSub}>Snap your clothing item or pick one from your gallery</Text>
+        <View style={[styles.photo, photoUri && styles.photoFilled]}>
+          {photoUri ? (
+            <View style={styles.previewWrap}>
+              <Image source={{ uri: photoUri }} style={styles.preview} />
+              <TouchableOpacity style={styles.removeBtn} onPress={removePhoto} hitSlop={8}>
+                <Ionicons name="close" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.photoIcon}>
+                <Ionicons name="camera-outline" size={34} color={colors.primary} />
+              </View>
+              <Text style={styles.photoTitle}>Add a photo</Text>
+              <Text style={styles.photoSub}>Snap your clothing item or pick one from your gallery</Text>
+            </>
+          )}
 
           <View style={styles.photoButtons}>
             <PrimaryButton
-              title="Camera"
+              title={photoUri ? 'Retake' : 'Camera'}
               icon="camera"
+              onPress={takePhoto}
               style={{ flex: 1, marginRight: 10, paddingVertical: 13 }}
             />
             <PrimaryButton
-              title="Gallery"
+              title={photoUri ? 'Replace' : 'Gallery'}
               icon="images"
               variant="secondary"
+              onPress={pickFromGallery}
               style={{ flex: 1, paddingVertical: 13 }}
             />
           </View>
@@ -144,6 +228,7 @@ export default function AddItemScreen({ navigation, route }) {
           title={isEdit ? 'Save changes' : 'Save to Wardrobe'}
           icon="checkmark"
           onPress={handleSave}
+          loading={saving}
           style={{ marginTop: 28 }}
         />
       </ScrollView>
@@ -164,6 +249,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primarySoft,
     borderStyle: 'dashed',
   },
+  photoFilled: { borderStyle: 'solid', borderColor: colors.card, padding: 14, ...shadow.card },
   photoIcon: {
     width: 70,
     height: 70,
@@ -176,6 +262,20 @@ const styles = StyleSheet.create({
   photoTitle: { fontSize: 18, fontWeight: '800', color: colors.ink },
   photoSub: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: 4, marginBottom: 18 },
   photoButtons: { flexDirection: 'row', width: '100%' },
+
+  previewWrap: { width: '100%', aspectRatio: 1, marginBottom: 14 },
+  preview: { width: '100%', height: '100%', borderRadius: radius.lg, backgroundColor: colors.bg },
+  removeBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    backgroundColor: 'rgba(20,23,43,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   label: { fontSize: 13, fontWeight: '700', color: colors.ink, marginBottom: 10, marginLeft: 2, marginTop: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },

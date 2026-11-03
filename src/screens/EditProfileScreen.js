@@ -38,7 +38,9 @@ export default function EditProfileScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user?.initials || '?'}</Text>
           </View>

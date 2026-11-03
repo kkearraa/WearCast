@@ -67,7 +67,9 @@ export default function ItemDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Image */}
         <View style={[styles.image, { backgroundColor: meta.tint }]}>
           {item.image ? (

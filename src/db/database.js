@@ -7,12 +7,18 @@ const DATABASE_VERSION = 1;
 
 let dbPromise = null;
 
-// One shared connection for the whole app. The first call opens + prepares the
-// database, every later call reuses the same promise.
+// Make the web fail clearly instead of spinning forever
+// , which gives up after 10 seconds:
+const withTimeout = (promise, ms) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), ms)),
+  ]);
+
 export function getDb() {
   if (!dbPromise) {
-    dbPromise = initDb().catch((e) => {
-      dbPromise = null; // allow a retry if opening failed
+    dbPromise = withTimeout(initDb(), 10000).catch((e) => {
+      dbPromise = null; // allow a retry
       throw e;
     });
   }
@@ -24,7 +30,7 @@ async function initDb() {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   await migrate(db);
 
-  // Until real accounts exist (step 2), everything belongs to a built-in guest user.
+  // Until real accounts exist, everything belongs to a built-in guest user.
   await db.runAsync(
     'INSERT OR IGNORE INTO users (id, name, created_at) VALUES (?, ?, ?)',
     GUEST_ID,

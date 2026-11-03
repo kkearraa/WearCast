@@ -1,4 +1,5 @@
 import { getDb } from './database';
+import { resolveImageUri, deleteImageFile } from '../utils/imageStore';
 
 const newId = () => `${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
 
@@ -20,7 +21,8 @@ const rowToItem = (r) => ({
   formality: r.formality,
   seasons: parseSeasons(r.seasons),
   status: r.status,
-  image: r.image_path,
+  image: resolveImageUri(r.image_path), // full address, ready for <Image>
+  imagePath: r.image_path, // relative path as stored in the database
   addedOn: new Date(r.created_at).toLocaleDateString(),
 });
 
@@ -97,12 +99,19 @@ export async function updateClothing(id, fields) {
 
 export async function deleteClothing(id) {
   const db = await getDb();
+  const row = await db.getFirstAsync('SELECT image_path FROM clothes WHERE id = ?', id);
   await db.runAsync('DELETE FROM clothes WHERE id = ?', id);
+  if (row?.image_path) await deleteImageFile(row.image_path); // don't leave orphan photos
 }
 
 export async function clearClothesForUser(userId) {
   const db = await getDb();
+  const rows = await db.getAllAsync(
+    'SELECT image_path FROM clothes WHERE user_id = ? AND image_path IS NOT NULL',
+    userId
+  );
   await db.runAsync('DELETE FROM clothes WHERE user_id = ?', userId);
+  for (const r of rows) await deleteImageFile(r.image_path);
 }
 
 // Counts computed by the database itself (used by the Home screen)

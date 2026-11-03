@@ -15,7 +15,7 @@ export default function SettingsScreen() {
   const [weatherKey, setWeatherKey] = useState('');
   const [aiKey, setAiKey] = useState('');
 
-  
+  // Moved here from the old Home screen: your existing "Clear Wardrobe" feature
   const handleClearAll = () => {
     Alert.alert('Clear wardrobe?', 'This removes every item saved on this device.', [
       { text: 'Cancel', style: 'cancel' },
@@ -25,7 +25,9 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.group}>Weather</Text>
         <View style={styles.card}>
           <Text style={styles.rowTitle}>Temperature units</Text>

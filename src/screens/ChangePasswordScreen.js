@@ -42,7 +42,9 @@ export default function ChangePasswordScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.hint}>Choose a password with at least 8 characters, including a letter and a number.</Text>
 
           <FormError message={error} />
