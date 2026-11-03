@@ -1,5 +1,4 @@
 import * as SQLite from 'expo-sqlite';
-import { migrateLegacyClothes } from './legacyMigration';
 import { GUEST_ID } from './session';
 
 const DATABASE_NAME = 'wearcast.db';
@@ -38,8 +37,6 @@ async function initDb() {
     Date.now()
   );
 
-  // One-time import of clothes saved by the old AsyncStorage version of the app.
-  await migrateLegacyClothes(db, GUEST_ID);
   return db;
 }
 
