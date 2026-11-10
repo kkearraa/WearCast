@@ -9,10 +9,13 @@ import { useWeather } from '../context/WeatherContext';
 import { getSettings, setSetting } from '../db/settings';
 import { clearWeatherCache } from '../db/weatherCache';
 import { getWeatherApiKey, setWeatherApiKey, getAiApiKey, setAiApiKey } from '../utils/secrets';
+import { checkAiKey, callGemini, callOpenAI } from '../services/aiClients';
 import { clearClothes } from '../utils/storage';
-import { colors, radius, shadow } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function SettingsScreen() {
+  const { colors, styles, mode, setMode } = useStyles(makeStyles);
   const { units, changeUnits, refresh } = useWeather();
 
   const [useGps, setUseGps] = useState(true);
@@ -25,6 +28,8 @@ export default function SettingsScreen() {
   const [hasWeatherKey, setHasWeatherKey] = useState(false);
   const [hasAiKey, setHasAiKey] = useState(false);
   const [savingKeys, setSavingKeys] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null); // { ok, text }
 
   // If something weather-related changed, reload the weather when leaving this screen
   const dirty = useRef(false);
@@ -92,6 +97,47 @@ export default function SettingsScreen() {
     }
   };
 
+  // Checks the SAVED key for the selected provider with a tiny request.
+  const handleTestKey = async () => {
+    setTestResult(null);
+    setTesting(true);
+    let hint = '';
+    try {
+      const stored = await getAiApiKey(provider);
+      if (!stored) {
+        setTestResult({ ok: false, text: `No ${provider} key saved yet. Paste it above and tap Save API keys first.` });
+        return;
+      }
+      // Only the start, the end and the length are shown, so you can compare with the original.
+      hint = `${stored.slice(0, 4)}...${stored.slice(-3)}, ${stored.length} characters`;
+      await checkAiKey(provider, stored);
+
+      // Second stage: a real (tiny) generation request, the same kind the Outfit tab sends.
+      const started = Date.now();
+      const seconds = () => ((Date.now() - started) / 1000).toFixed(1);
+      try {
+        const ask = provider === 'OpenAI' ? callOpenAI : callGemini;
+        await ask('Reply with only this JSON: {"ok":true}', stored);
+        setTestResult({ ok: true, text: `Key works and the AI answered in ${seconds()} s (${hint}).` });
+      } catch (e) {
+        setTestResult({
+          ok: false,
+          text: `Key is valid, but a test request failed after ${seconds()} s: ${e.code}${e.detail ? ` (${e.detail})` : ''}.`,
+        });
+      }
+    } catch (e) {
+      const reason =
+        e.code === 'BAD_KEY'
+          ? `${provider} rejected the saved key`
+          : e.code === 'OFFLINE' || e.code === 'TIMEOUT'
+          ? "Couldn't reach the service"
+          : 'The test failed, try again';
+      setTestResult({ ok: false, text: `${reason}${hint ? ` (${hint})` : ''}.` });
+    } finally {
+      setTesting(false);
+    }
+  };
+
   // Moved here from the old Home screen: your existing "Clear Wardrobe" feature
   const handleClearAll = () => {
     Alert.alert('Clear wardrobe?', 'This removes every item saved in your closet on this device.', [
@@ -113,6 +159,26 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+        <Text style={styles.group}>Appearance</Text>
+        <View style={styles.card}>
+          <Text style={styles.rowTitle}>Theme</Text>
+          <View style={styles.segment}>
+            {[
+              { key: 'system', label: 'System' },
+              { key: 'light', label: 'Light' },
+              { key: 'dark', label: 'Dark' },
+            ].map((m) => (
+              <TouchableOpacity
+                key={m.key}
+                style={[styles.segmentItem, mode === m.key && styles.segmentActive]}
+                onPress={() => setMode(m.key)}
+              >
+                <Text style={[styles.segmentText, mode === m.key && { color: '#fff' }]}>{m.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <Text style={styles.group}>Weather</Text>
         <View style={styles.card}>
           <Text style={styles.rowTitle}>Units</Text>
@@ -178,8 +244,22 @@ export default function SettingsScreen() {
           icon="lock-closed-outline"
           onPress={handleSaveKeys}
           loading={savingKeys}
-          style={{ marginBottom: 18 }}
+          style={{ marginBottom: 10 }}
         />
+        <PrimaryButton
+          title={`Test ${provider} key`}
+          icon="checkmark-done-outline"
+          variant="secondary"
+          onPress={handleTestKey}
+          loading={testing}
+          style={{ marginBottom: testResult ? 10 : 18 }}
+        />
+        {testResult && (
+          <Text style={[styles.testResult, { color: testResult.ok ? colors.success : colors.danger }]}>
+            {testResult.text}
+          </Text>
+        )}
+        <View style={{ height: 8 }} />
 
         <Text style={styles.group}>Offline & data</Text>
         <View style={styles.card}>
@@ -207,10 +287,12 @@ export default function SettingsScreen() {
 }
 
 function Divider() {
+  const { colors } = useStyles(makeStyles);
   return <View style={{ height: 1, backgroundColor: colors.line, marginVertical: 16 }} />;
 }
 
 function ToggleRow({ icon, title, sub, value, onChange }) {
+  const { colors, styles } = useStyles(makeStyles);
   return (
     <View style={styles.toggleRow}>
       <View style={styles.icon}>
@@ -230,7 +312,7 @@ function ToggleRow({ icon, title, sub, value, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   group: {
@@ -246,6 +328,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.card, borderRadius: radius.lg, padding: 18, marginBottom: 18, ...shadow.card },
   rowTitle: { fontSize: 15, fontWeight: '700', color: colors.ink, marginBottom: 12 },
   sub: { fontSize: 12, color: colors.muted },
+  testResult: { fontSize: 13, fontWeight: '700', lineHeight: 19, marginBottom: 18, marginHorizontal: 4 },
   help: { fontSize: 12, color: colors.muted, lineHeight: 18, marginLeft: 2 },
   chips: { flexDirection: 'row' },
 

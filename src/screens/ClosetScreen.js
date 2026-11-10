@@ -6,16 +6,18 @@ import { Ionicons } from '@expo/vector-icons';
 import ClothingCard from '../components/ClothingCard';
 import Chip from '../components/Chip';
 import { getClothes } from '../utils/storage';
-import { categories, colors, radius, shadow } from '../theme';
+import { categories, radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 const FILTERS = ['All', ...categories.map((c) => c.key), 'Laundry'];
 
 export default function ClosetScreen({ navigation }) {
+  const { colors, styles } = useStyles(makeStyles);
   const [clothes, setClothes] = useState([]);
   const [filter, setFilter] = useState('All');
   const [query, setQuery] = useState('');
 
-  
+  // Reload storage whenever the screen comes into focus (same as your old HomeScreen)
   useFocusEffect(
     useCallback(() => {
       (async () => setClothes(await getClothes()))();
@@ -29,7 +31,7 @@ export default function ClosetScreen({ navigation }) {
     return matchesFilter && matchesQuery;
   });
 
-  
+  // pad odd lists so the last tile doesn't stretch across the whole row
   const data = visible.length % 2 === 1 ? [...visible, { id: '__spacer', spacer: true }] : visible;
 
   return (
@@ -97,7 +99,7 @@ export default function ClosetScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
   title: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5 },

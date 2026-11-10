@@ -8,9 +8,11 @@ import Chip from '../components/Chip';
 import PrimaryButton from '../components/PrimaryButton';
 import { addClothingItem, updateItem } from '../utils/storage';
 import { saveImageFile, deleteImageFile } from '../utils/imageStore';
-import { categories, formalities, seasons, colors, radius, shadow } from '../theme';
+import { categories, formalities, seasons, radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function AddItemScreen({ navigation, route }) {
+  const { colors, styles } = useStyles(makeStyles);
   // When opened from "Edit" an existing item is passed in; otherwise this is the Add form.
   const editing = route?.params?.item || null;
   const isEdit = !!editing;
@@ -236,7 +238,7 @@ export default function AddItemScreen({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
 

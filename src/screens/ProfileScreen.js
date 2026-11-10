@@ -6,9 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { getStats } from '../utils/storage';
-import { colors, radius, shadow } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function ProfileScreen({ navigation }) {
+  const { styles } = useStyles(makeStyles);
   const { user, logOut } = useAuth();
   const [stats, setStats] = useState({ total: 0, clean: 0, laundry: 0 });
 
@@ -64,7 +66,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.menu}>
               <MenuRow icon="person-outline" label="Edit profile" onPress={() => navigation.navigate('EditProfile')} />
               <MenuRow icon="lock-closed-outline" label="Change password" onPress={() => navigation.navigate('ChangePassword')} />
-              <MenuRow icon="heart-outline" label="Saved outfits" last />
+              <MenuRow icon="heart-outline" label="Saved outfits" onPress={() => navigation.navigate('SavedOutfits')} last />
             </View>
           </>
         )}
@@ -95,6 +97,7 @@ export default function ProfileScreen({ navigation }) {
 }
 
 function Stat({ value, label }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
       <Text style={styles.statValue}>{value}</Text>
@@ -104,6 +107,7 @@ function Stat({ value, label }) {
 }
 
 function MenuRow({ icon, label, onPress, last }) {
+  const { colors, styles } = useStyles(makeStyles);
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={[styles.menuRow, !last && styles.menuDivider]}>
       <View style={styles.menuIcon}>
@@ -115,7 +119,7 @@ function MenuRow({ icon, label, onPress, last }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 4, marginBottom: 18 },

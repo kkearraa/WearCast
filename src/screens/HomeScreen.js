@@ -20,9 +20,11 @@ import { useWeather } from '../context/WeatherContext';
 import { getStats } from '../utils/storage';
 import { tempValue, windText, iconColor, hourLabel } from '../utils/units';
 import { getWeatherProblem, cacheBannerText } from '../utils/weatherMessages';
-import { colors, radius, shadow } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function HomeScreen({ navigation }) {
+  const { colors, styles } = useStyles(makeStyles);
   const { user } = useAuth();
   const { weather, source, error, loading, units, refresh } = useWeather();
   const [stats, setStats] = useState({ total: 0, clean: 0, laundry: 0 });
@@ -207,6 +209,7 @@ export default function HomeScreen({ navigation }) {
 }
 
 function Metric({ icon, label, value }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={styles.metric}>
       <Ionicons name={icon} size={18} color="rgba(255,255,255,0.85)" />
@@ -217,6 +220,7 @@ function Metric({ icon, label, value }) {
 }
 
 function Stat({ value, label, tint, color }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={[styles.stat, { backgroundColor: tint }]}>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
@@ -225,7 +229,7 @@ function Stat({ value, label, tint, color }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },

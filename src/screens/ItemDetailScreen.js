@@ -6,13 +6,15 @@ import { Ionicons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import { mockItem } from '../data/mockData';
 import { updateItemStatus, deleteItemById, getItemById } from '../utils/storage';
-import { colors, radius, shadow, getCategoryMeta } from '../theme';
+import { radius, getCategoryMeta } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function ItemDetailScreen({ route, navigation }) {
+  const { colors, styles, isDark } = useStyles(makeStyles);
   const initial = route.params?.item || mockItem;
   const [item, setItem] = useState(initial);
   const [inLaundry, setInLaundry] = useState(initial.status === 'In Laundry');
-  const meta = getCategoryMeta(item.category);
+  const meta = getCategoryMeta(item.category, isDark);
   const isSample = item.id === 'sample'; // the placeholder item isn't in the database
 
   // Reload from the database whenever we come back (e.g. after saving in the Edit form)
@@ -83,9 +85,9 @@ export default function ItemDetailScreen({ route, navigation }) {
 
         <View style={styles.tags}>
           <Tag label={item.category} bg={colors.primarySoft} color={colors.primary} />
-          {item.formality ? <Tag label={item.formality} bg="#FFF1E3" color="#C2570C" /> : null}
+          {item.formality ? <Tag label={item.formality} bg={isDark ? '#4A3524' : '#FFF1E3'} color={isDark ? '#FFB27A' : '#C2570C'} /> : null}
           {(item.seasons || []).map((s) => (
-            <Tag key={s} label={s} bg="#E7F4FF" color="#1C6FB5" />
+            <Tag key={s} label={s} bg={isDark ? '#243B52' : '#E7F4FF'} color={isDark ? '#7CC0FF' : '#1C6FB5'} />
           ))}
         </View>
 
@@ -142,6 +144,7 @@ export default function ItemDetailScreen({ route, navigation }) {
 }
 
 function Tag({ label, bg, color }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={[styles.tag, { backgroundColor: bg }]}>
       <Text style={[styles.tagText, { color }]}>{label}</Text>
@@ -150,6 +153,7 @@ function Tag({ label, bg, color }) {
 }
 
 function Row({ label, value, last }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={[styles.row, !last && styles.rowDivider]}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -158,7 +162,7 @@ function Row({ label, value, last }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   image: {

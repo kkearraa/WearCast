@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, radius, shadow, getCategoryMeta } from '../theme';
+import { radius, getCategoryMeta } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 // Grid tile for a clothing item. Works with your existing item shape
 // ({ id, name, category, status }) and any extra fields (image, formality...).
 export default function ClothingCard({ item, onPress }) {
-  const meta = getCategoryMeta(item.category);
+  const { colors, styles, isDark } = useStyles(makeStyles);
+  const meta = getCategoryMeta(item.category, isDark);
   const isClean = item.status === 'Clean' || !item.status;
 
   return (
@@ -38,7 +40,7 @@ export default function ClothingCard({ item, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   card: {
     flex: 1,
     margin: 6,

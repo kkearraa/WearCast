@@ -6,9 +6,11 @@ import FormError from '../components/FormError';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { passwordProblem } from '../utils/validation';
-import { colors } from '../theme';
+import { useStyles } from '../context/ThemeContext';
+
 
 export default function ChangePasswordScreen({ navigation }) {
+  const { styles } = useStyles(makeStyles);
   const { changePassword } = useAuth();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -66,7 +68,7 @@ export default function ChangePasswordScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   hint: { fontSize: 14, color: colors.muted, lineHeight: 21, marginBottom: 20 },

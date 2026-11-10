@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function Field({ label, icon, secure, error, style, ...inputProps }) {
+  const { colors, styles } = useStyles(makeStyles);
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
 
@@ -42,7 +44,7 @@ export default function Field({ label, icon, secure, error, style, ...inputProps
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   wrap: { marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '700', color: colors.ink, marginBottom: 8, marginLeft: 2 },
   box: {
@@ -55,7 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 54,
   },
-  boxFocused: { borderColor: colors.primary, backgroundColor: '#FAFBFF' },
+  boxFocused: { borderColor: colors.primary, backgroundColor: colors.card },
   boxError: { borderColor: colors.danger },
   icon: { marginRight: 10 },
   input: { flex: 1, fontSize: 16, color: colors.ink, height: '100%' },

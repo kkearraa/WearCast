@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 // Red message box for form errors. Renders nothing when there's no message.
 export default function FormError({ message, style }) {
+  const { colors, styles } = useStyles(makeStyles);
   if (!message) return null;
   return (
     <View style={[styles.box, style]}>
@@ -14,7 +16,7 @@ export default function FormError({ message, style }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   box: {
     flexDirection: 'row',
     alignItems: 'center',

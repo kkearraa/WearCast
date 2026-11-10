@@ -6,9 +6,11 @@ import FormError from '../components/FormError';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { isValidEmail } from '../utils/validation';
-import { colors } from '../theme';
+import { useStyles } from '../context/ThemeContext';
+
 
 export default function EditProfileScreen({ navigation }) {
+  const { styles } = useStyles(makeStyles);
   const { user, updateProfile } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -56,7 +58,7 @@ export default function EditProfileScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   avatar: {

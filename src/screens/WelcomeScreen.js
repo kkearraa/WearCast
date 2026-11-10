@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function WelcomeScreen({ navigation }) {
+  const { styles } = useStyles(makeStyles);
   const { continueAsGuest } = useAuth();
 
   const enterApp = async () => {
@@ -59,7 +61,7 @@ export default function WelcomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.navy },
   safe: { flex: 1, justifyContent: 'space-between' },
   blob: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(79,91,255,0.35)' },

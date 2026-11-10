@@ -10,6 +10,7 @@ import {
   clearClothesForUser,
   getClothingStats,
 } from '../db/clothes';
+import { saveOutfit, deleteOutfit, getOutfits, countOutfits } from '../db/outfits';
 
 // Reads never crash the app: on any error they return an empty result instead.
 export const getClothes = async () => {
@@ -55,5 +56,24 @@ export const clearClothes = async () => {
   } catch (e) {
     console.error('Error clearing clothes', e);
     return false;
+  }
+};
+
+// ---- Saved outfits (current user) ----
+export const saveOutfitForUser = (outfit) => saveOutfit(getCurrentUserId(), outfit);
+export const deleteSavedOutfit = (id) => deleteOutfit(getCurrentUserId(), id);
+export const getSavedOutfits = async () => {
+  try {
+    return await getOutfits(getCurrentUserId());
+  } catch (e) {
+    console.error('Error reading outfits', e);
+    return [];
+  }
+};
+export const getSavedOutfitCount = async () => {
+  try {
+    return await countOutfits(getCurrentUserId());
+  } catch (e) {
+    return 0;
   }
 };

@@ -7,9 +7,11 @@ import FormError from '../components/FormError';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { isValidEmail, passwordProblem } from '../utils/validation';
-import { colors } from '../theme';
+import { useStyles } from '../context/ThemeContext';
+
 
 export default function SignUpScreen({ navigation }) {
+  const { colors, styles } = useStyles(makeStyles);
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -104,7 +106,7 @@ export default function SignUpScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 24, flexGrow: 1 },
   back: {

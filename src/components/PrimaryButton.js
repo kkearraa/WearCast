@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, shadow } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 // variant: 'primary' | 'secondary' | 'ghost' | 'danger'
 // loading: shows a spinner and blocks extra taps while something is happening
@@ -14,6 +15,7 @@ export default function PrimaryButton({
   loading = false,
   disabled = false,
 }) {
+  const { colors, styles } = useStyles(makeStyles);
   const textColor =
     variant === 'primary' ? '#fff' : variant === 'danger' ? colors.danger : colors.primary;
   const inactive = loading || disabled;
@@ -37,7 +39,7 @@ export default function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   base: {
     paddingVertical: 16,
     paddingHorizontal: 20,

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, radius } from '../theme';
+import { radius } from '../theme';
+import { useStyles } from '../context/ThemeContext';
 
 export default function Chip({ label, active, onPress, emoji, style }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -17,7 +19,7 @@ export default function Chip({ label, active, onPress, emoji, style }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 10,

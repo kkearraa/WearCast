@@ -14,7 +14,7 @@ const getInitials = (name) => {
   return (first + last).toUpperCase();
 };
 
-// database row -> user object used by the screens.
+// database row -> user object used by the screens (never includes the hash or salt)
 const rowToUser = (r) => ({
   id: r.id,
   name: r.name,

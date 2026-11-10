@@ -1,4 +1,3 @@
-import { colors } from '../theme';
 
 // Weather is always stored in metric (°C, km/h). These helpers convert for display,
 // so switching units in Settings changes the screen instantly without a new request.
@@ -11,8 +10,8 @@ export const windText = (kmh, units) =>
 // Icon color: sunny icons are yellow, everything else is a cool blue.
 export const iconColor = (name, onLight = false) => {
   const sunny = name === 'sunny' || name === 'partly-sunny';
-  if (onLight) return sunny ? '#F59E0B' : colors.primary;
-  return sunny ? colors.sun : '#BFD0FF';
+  if (onLight) return sunny ? '#F59E0B' : '#6C77FF';
+  return sunny ? '#FFB547' : '#BFD0FF';
 };
 
 export const hourLabel = (ms) => new Date(ms).toLocaleTimeString([], { hour: 'numeric' });

@@ -6,9 +6,11 @@ import Field from '../components/Field';
 import FormError from '../components/FormError';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
-import { colors } from '../theme';
+import { useStyles } from '../context/ThemeContext';
+
 
 export default function LoginScreen({ navigation }) {
+  const { colors, styles } = useStyles(makeStyles);
   const { logIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,7 +93,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 24, flexGrow: 1 },
   back: {

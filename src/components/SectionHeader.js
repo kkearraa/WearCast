@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import { useStyles } from '../context/ThemeContext';
+
 
 export default function SectionHeader({ title, action, onAction, style }) {
+  const { styles } = useStyles(makeStyles);
   return (
     <View style={[styles.row, style]}>
       <Text style={styles.title}>{title}</Text>
@@ -15,7 +17,7 @@ export default function SectionHeader({ title, action, onAction, style }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, shadow }) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

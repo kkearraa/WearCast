@@ -14,7 +14,7 @@ const read = async (name) => {
 };
 
 const write = async (name, value) => {
-  const clean = (value || '').trim();
+  const clean = (value || '').replace(/\s+/g, ''); // keys never contain spaces or line breaks
   if (!clean) return;
   await SecureStore.setItemAsync(name, clean);
 };

@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { GUEST_ID } from './session';
 
 const DATABASE_NAME = 'wearcast.db';
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 let dbPromise = null;
 
@@ -92,6 +92,34 @@ async function migrate(db) {
       );
     `);
     version = 2;
+  }
+
+  // Version 3: saved outfits (an outfit + the clothes it is made of)
+  if (version === 2) {
+    await db.execAsync(`
+      CREATE TABLE outfits (
+        id         TEXT PRIMARY KEY NOT NULL,
+        user_id    TEXT NOT NULL,
+        occasion   TEXT NOT NULL,
+        tip        TEXT,
+        weather    TEXT,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE outfit_items (
+        outfit_id TEXT NOT NULL,
+        item_id   TEXT NOT NULL,
+        position  INTEGER NOT NULL,
+        reason    TEXT,
+        PRIMARY KEY (outfit_id, item_id),
+        FOREIGN KEY (outfit_id) REFERENCES outfits(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES clothes(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX idx_outfits_user ON outfits(user_id, created_at);
+    `);
+    version = 3;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

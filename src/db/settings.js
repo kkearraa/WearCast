@@ -7,6 +7,7 @@ const DEFAULTS = {
   useGps: '1',
   cacheWeather: '1',
   aiProvider: 'Gemini',
+  themeMode: 'system', // 'system' | 'light' | 'dark'
 };
 
 export async function getSettings() {
@@ -21,6 +22,7 @@ export async function getSettings() {
     useGps: map.useGps === '1',
     cacheWeather: map.cacheWeather === '1',
     aiProvider: map.aiProvider === 'OpenAI' ? 'OpenAI' : 'Gemini',
+    themeMode: ['light', 'dark'].includes(map.themeMode) ? map.themeMode : 'system',
   };
 }
 

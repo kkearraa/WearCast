@@ -13,11 +13,12 @@ import OutfitScreen from '../screens/OutfitScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AddItemScreen from '../screens/AddItemScreen';
 import ItemDetailScreen from '../screens/ItemDetailScreen';
+import SavedOutfitsScreen from '../screens/SavedOutfitsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import { useAuth } from '../context/AuthContext';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,6 +31,7 @@ const TAB_ICONS = {
 };
 
 function MainTabs() {
+  const { colors, isDark } = useTheme();
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -39,11 +41,11 @@ function MainTabs() {
         tabBarInactiveTintColor: colors.faint,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: colors.card,
           borderTopWidth: 0,
           paddingTop: 6,
           elevation: 16,
-          shadowColor: '#1B2150',
+          shadowColor: isDark ? '#000' : '#1B2150',
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.06,
           shadowRadius: 12,
@@ -63,6 +65,7 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const { colors } = useTheme();
   const { user, loading } = useAuth();
 
   // While we check for a saved login, show a splash instead of flashing the Welcome screen.
@@ -105,6 +108,7 @@ export default function AppNavigator() {
       {/* Pushed screens */}
       <Stack.Screen name="AddItem" component={AddItemScreen} options={{ title: 'Add Clothing' }} />
       <Stack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: 'Item Details' }} />
+      <Stack.Screen name="SavedOutfits" component={SavedOutfitsScreen} options={{ title: 'Saved Outfits' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
